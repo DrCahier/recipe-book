@@ -1,0 +1,27 @@
+#
+#AuthUserFile "/home/counterspace/graphicker.com/htpasswd/recipe/.htpasswd"
+#AuthName "Member Site"
+#AuthType BASIC
+#require valid-user
+
+# MIME
+<IfModule mod_mime.c>
+  AddType application/manifest+json .webmanifest
+  AddType application/json .json
+  AddType application/javascript .js
+  AddType text/css .css
+</IfModule>
+
+# SWは常に最新（キャッシュ禁止）
+<Files "service-worker.js">
+  <IfModule mod_headers.c>
+    Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+  </IfModule>
+</Files>
+
+# www付きアクセスを正規化（任意）
+#RewriteEngine On
+#RewriteCond %{HTTP_HOST} ^www\.recipe\.graphicker\.com$ [NC]
+#RewriteRule ^(.*)$ https://recipe.graphicker.com/$1 [L,R=301]

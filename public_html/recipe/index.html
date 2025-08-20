@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>レシピアプリ（Phase 0）</title>
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#ffffff" />
+    <link rel="icon" href="/assets/img/icn/192.png" sizes="192x192" />
+    <link rel="apple-touch-icon" href="/assets/img/icn/192.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+</head>
+<body>
+<header class="site-header">
+    <h1>レシピアプリ</h1>
+    <button id="installBtn" hidden>ホームに追加</button>
+</header>
+
+<main>
+    <section>
+        <h2>お気に入りレシピ（ダミー）</h2>
+        <ul class="recipe-list">
+            <li><strong>親子丼</strong> — 15分 / 初級</li>
+            <li><strong>味噌汁</strong> — 10分 / 初級</li>
+            <li><strong>サバの味噌煮</strong> — 25分 / 中級</li>
+        </ul>
+        <p class="muted">※ Phase 0 は表示だけ。検索や保存は後続フェーズで。</p>
+    </section>
+</main>
+
+<footer class="site-footer">© 2025 Recipe App</footer>
+
+<script>
+    // Service Worker 登録（明示スコープ＋ログ）
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', async () => {
+            try {
+                const reg = await navigator.serviceWorker.register('/service-worker.js', { scope: '/' });
+                console.log('SW registered scope:', reg.scope);
+                await navigator.serviceWorker.ready;
+                console.log('SW ready. controller?', !!navigator.serviceWorker.controller);
+            } catch (e) {
+                console.error('SW register error:', e);
+            }
+        });
+    }
+
+    // PWA インストールプロンプト
+    let deferredPrompt;
+    const btn = document.getElementById('installBtn');
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        btn.hidden = false;
+    });
+    btn.addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        await deferredPrompt.userChoice;
+        btn.hidden = true;
+        deferredPrompt = null;
+    });
+</script>
+</body>
+</html>

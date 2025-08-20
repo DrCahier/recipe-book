@@ -1,0 +1,10 @@
+:root { --fg:#222; --bg:#fff; --muted:#6b7280; }
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui}
+.site-header,.site-footer{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #eee}
+.site-footer{border-top:1px solid #eee;border-bottom:none;color:var(--muted)}
+h1{font-size:20px;margin:0}
+main{padding:16px}
+.recipe-list{list-style:none;padding:0;margin:8px 0 0}
+.recipe-list li{padding:10px 12px;border:1px solid #eee;border-radius:10px;margin:8px 0}
+.muted{color:var(--muted)}
+#installBtn{border:1px solid #ddd;border-radius:999px;padding:8px 12px;background:#fff;cursor:pointer}
