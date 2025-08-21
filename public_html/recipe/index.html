@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    $1
-    <link rel="manifest" href="/manifest.json">
+    <title>レシピアプリ</title>
     <meta name="theme-color" content="#E4572E">
     <link rel="manifest" href="/manifest.json">
+    <link rel="stylesheet" href="/assets/css/style.css">
     <style>
         body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Noto Sans JP, sans-serif; background:#f5f5f5; color:#333; margin:20px; }
         .screen { border: 2px solid #ccc; border-radius: 16px; background: #fff; padding: 16px; margin-bottom: 24px; width: 420px; box-shadow: 0 2px 6px rgba(0,0,0,.08); }
@@ -28,21 +28,26 @@
         .meta { color:#666; font-size:12px; }
         .muted { color:#777; font-size:12px; }
         mark { background: #fff59d; padding: 0 .15em; border-radius: 3px; }
+        #resultCount { font-size:12px; color:#666; margin:6px 0 0; }
     </style>
 </head>
 <body>
 <!-- ホーム（検索＋一覧） -->
-<div class="screen">
+<div class="screen" role="main" aria-labelledby="home-ttl">
     <div class="header">
-        <div class="input"><input id="searchInput" type="search" placeholder="レシピを検索（スペース区切りでAND：例『鶏 レモン』）" aria-label="レシピ検索" /></div>
+        <div class="input">
+            <input id="searchInput" type="search" placeholder="レシピを検索（スペース区切りでAND：例『鶏 レモン』）" aria-label="レシピ検索" autocomplete="off" />
+        </div>
         <div class="tabs" role="tablist" aria-label="表示切替">
-            <button id="tabAll" class="tab ghost" role="tab" aria-selected="true">すべて</button>
-            <button id="tabFav" class="tab ghost" role="tab" aria-selected="false">お気に入り</button>
+            <button id="tabAll" class="tab ghost" role="tab" aria-selected="true" aria-controls="recipeList">すべて</button>
+            <button id="tabFav" class="tab ghost" role="tab" aria-selected="false" aria-controls="recipeList">お気に入り</button>
         </div>
     </div>
     <p class="muted">タイトル・タグ・材料を対象。全角/半角・ひらがな/カタカナのゆらぎを吸収して検索します。</p>
-    <h2>ホーム（一覧）</h2>
+
+    <h2 id="home-ttl">ホーム（一覧）</h2>
     <div class="card">（将来）カテゴリ / #タグ フィルタバー</div>
+    <p id="resultCount" aria-live="polite"></p>
     <div id="recipeList"></div>
     <div class="card" id="noResults" style="display:none;">該当するレシピが見つかりません。</div>
 </div>
@@ -61,6 +66,7 @@
     const noResultsEl = document.getElementById('noResults');
     const tabAll = document.getElementById('tabAll');
     const tabFav = document.getElementById('tabFav');
+    const resultCount = document.getElementById('resultCount');
     let currentTab = 'all';
 
     function kataToHira(str){ return (str||'').replace(/[ァ-ン]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0x60)); }
@@ -76,6 +82,7 @@
 
     function render(recipes, tokens=[]){
         listEl.innerHTML = '';
+        resultCount.textContent = `${recipes.length}件ヒット`;
         if(!recipes.length){ noResultsEl.style.display='block'; return; }
         noResultsEl.style.display='none';
         const frag = document.createDocumentFragment();
@@ -86,13 +93,13 @@
             const ingText = r.ingredients.join('、');
             const tagsHTML = r.tags.map(t=>`<span class="tag">#${escapeHTML(t)}</span>`).join(' ');
             card.innerHTML=`
-          <div class="thumb">サムネ</div>
-          <div>
-            <strong>${highlight(r.title,tokens)}</strong>
-            <span class="fav ${favActive}" data-id="${r.id}">★</span><br>
-            ${tagsHTML}
-            <div class="meta">材料: ${highlight(ingText,tokens)}</div>
-          </div>`;
+        <div class="thumb" role="img" aria-label="サムネイル">サムネ</div>
+        <div>
+          <strong>${highlight(r.title,tokens)}</strong>
+          <button class="fav ${favActive}" data-id="${r.id}" aria-pressed="${favActive ? 'true' : 'false'}" aria-label="お気に入り切替">★</button><br>
+          ${tagsHTML}
+          <div class="meta">材料: ${highlight(ingText,tokens)}</div>
+        </div>`;
             frag.appendChild(card);
         });
         listEl.appendChild(frag);
@@ -135,18 +142,7 @@
 
     onQuery();
 
-    // --- Service Worker 登録 ---
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/service-worker.js')
-                .then(reg => console.log('SW登録成功', reg.scope))
-                .catch(err => console.error('SW登録失敗', err));
-        });
-    }
-</script>
-
-<!-- PWA: Service Worker registration (ページロード時に登録) -->
-<script>
+    // --- Service Worker 登録（単一） ---
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', async () => {
             try {
@@ -159,14 +155,6 @@
     }
 </script>
 
-<!-- ▼ この下の2つのコードは、実際には別ファイルとして保存して使ってね ▼ -->
-<!-- ===== manifest.json（/manifest.json に保存） =====
-
-===== ここまで manifest.json ===== -->
-
-<!-- ===== service-worker.js（/service-worker.js に保存） =====
-
-===== ここまで service-worker.js ===== -->
-
+<noscript>JavaScriptを有効にすると検索とお気に入りが使えます。</noscript>
 </body>
 </html>
