@@ -1,5 +1,5 @@
 /* eslint-disable no-restricted-globals */
-const VERSION = 'v2.0.0';
+const VERSION = 'v2.0.1';
 const PRECACHE_NAME = `precache-${VERSION}`;
 const RUNTIME_NAME  = `runtime-${VERSION}`;
 
@@ -35,15 +35,14 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
     const { request } = event;
 
-    // 非HTTP/HTTPSは無視（chrome-extension等を避ける）
+    // 非HTTP/HTTPSは無視（chrome-extension等）
     if (!request.url.startsWith(self.location.origin) && !/^https?:\/\//.test(request.url)) return;
 
-    // 画像など含め、GET以外はスルー
     if (request.method !== 'GET') return;
 
     const url = new URL(request.url);
 
-    // HTML: ネットワーク優先 + オフラインフォールバック
+    // HTML: ネット優先 + オフラインフォールバック
     if (request.headers.get('accept')?.includes('text/html')) {
         event.respondWith((async () => {
             try {
@@ -59,21 +58,28 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // JSON（レシピなど）: Stale-While-Revalidate
+    // JSON: Stale-While-Revalidate + 最終手段で空配列レスポンス
     if (url.pathname.endsWith('.json')) {
         event.respondWith((async () => {
             const cache = await caches.open(RUNTIME_NAME);
             const cached = await cache.match(request);
-            const fetchPromise = fetch(request).then(res => {
-                cache.put(request, res.clone());
-                return res;
-            }).catch(() => cached);
-            return cached || fetchPromise;
+            try {
+                const net = await fetch(request);
+                cache.put(request, net.clone());
+                return net;
+            } catch (e) {
+                if (cached) return cached;
+                // ここが今回の堅牢化ポイント：何も無いときは空配列を返す
+                return new Response('[]', {
+                    status: 200,
+                    headers: { 'Content-Type': 'application/json; charset=utf-8' }
+                });
+            }
         })());
         return;
     }
 
-    // CSS/JS/画像など静的: Cache First
+    // 静的資産: Cache First
     event.respondWith((async () => {
         const cache = await caches.open(PRECACHE_NAME);
         const cached = await cache.match(request);
@@ -83,7 +89,6 @@ self.addEventListener('fetch', (event) => {
             cache.put(request, net.clone());
             return net;
         } catch {
-            // 最低限のフォールバック（なければそのまま失敗）
             return cached || Response.error();
         }
     })());

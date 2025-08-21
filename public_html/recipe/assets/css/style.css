@@ -64,3 +64,30 @@ body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-s
 .tagchip:hover { border-color:#ddd; }
 .tagname { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .tagcount { color:#888; font-size:.85rem; }
+
+/* 最低限の見た目（必要なければ無視OK） */
+.c-card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px; margin: 16px 0; }
+.c-card__title { font-size: 1.1rem; margin: 0 0 .5rem; }
+.c-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+.btn { padding: .5rem .9rem; border-radius: 8px; border: 1px solid #d1d5db; background: #fff; cursor: pointer; }
+.btn.-ghost { background: transparent; }
+.c-help { color: #6b7280; font-size: .9rem; margin-top: .25rem; }
+.c-note { margin-top: .5rem; font-size: .9rem; color: #0a6; }
+
+/* === ボタンのコントラスト修正（読みやすさ優先） === */
+.btn, .btn:link, .btn:visited { color: #111; }
+.btn.-ghost { background: transparent; border: 1px solid #d1d5db; }
+
+/* 一覧カードの「詳しく見る」ははっきり見えるように暗色ボタン化 */
+.item__detail { background: #111; color: #fff !important; border: 1px solid #111; display: inline-block; padding: .4rem .8rem; border-radius: 8px; }
+
+/* IOセクションのボタンは白背景＋枠で読みやすく */
+#io-section .btn { background: #fff; border: 1px solid #d1d5db; }
+#io-section .btn.-ghost { background: transparent; }
+
+/* カードの最低限の見た目（必要なら） */
+.c-card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px; margin: 16px 0; }
+.c-card__title { font-size: 1.1rem; margin: 0 0 .5rem; }
+.c-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+.c-help { color: #6b7280; font-size: .9rem; margin-top: .25rem; }
+.c-note { margin-top: .5rem; font-size: .9rem; color: #0a6; }

@@ -9,9 +9,13 @@
     <link rel="apple-touch-icon" href="/assets/img/icn/512.png" sizes="512x512">
     <link rel="stylesheet" href="/assets/css/style.css">
     <meta name="theme-color" content="#ffffff">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><text y='52' font-size='52'>🍳</text></svg>">
 </head>
 <body>
 <header class="l-header">
+    <!-- ← お気に入りフィルタON時だけ表示する戻るボタン -->
+    <a id="backFromFavs" class="btn -ghost" href="/" hidden>← 戻る</a>
+
     <h1 class="app-title"><a href="/" class="home-link" aria-label="ホームへ">レシピ</a></h1>
 
     <div class="search">
@@ -42,6 +46,20 @@
 </header>
 
 <main class="l-main" id="main">
+    <!-- 追加：インポート／エクスポート -->
+    <section class="c-card" id="io-section" aria-labelledby="io-heading">
+        <h2 id="io-heading" class="c-card__title">インポート／エクスポート</h2>
+        <div class="c-card__body">
+            <div class="c-actions">
+                <button id="export-json" class="btn">JSONを書き出す</button>
+                <button id="import-json" class="btn -ghost">JSONを読み込む</button>
+                <input id="import-file" type="file" accept="application/json" hidden>
+            </div>
+            <p class="c-help">※ 書き出しは .json。読み込みは当アプリの書き出し形式のみ対応。</p>
+            <div id="io-result" class="c-note" aria-live="polite"></div>
+        </div>
+    </section>
+
     <!-- 一覧ページ -->
     <section id="page-list" aria-labelledby="list-heading">
         <h2 id="list-heading" class="visually-hidden">レシピ一覧</h2>
@@ -88,5 +106,7 @@
 
 <noscript>このアプリを使うには JavaScript を有効にしてください。</noscript>
 <script src="/app.js" defer></script>
+<!-- 追加：入出力モジュール -->
+<script src="/assets/js/io.js" defer></script>
 </body>
 </html>
