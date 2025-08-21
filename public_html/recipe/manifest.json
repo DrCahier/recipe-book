@@ -1,14 +1,13 @@
 {
-  "id": "/index.html",
   "name": "レシピアプリ",
   "short_name": "レシピ",
-  "start_url": "/index.html",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#ffffff",
+  "theme_color": "#E4572E",
   "icons": [
-    { "src": "/assets/img/icn/192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/assets/img/icn/512.png", "sizes": "512x512", "type": "image/png" }
+    { "src": "/assets/img/icn/192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/img/icn/512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
   ]
 }

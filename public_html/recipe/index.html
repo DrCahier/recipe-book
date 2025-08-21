@@ -1,65 +1,172 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="utf-8" />
+    <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>レシピアプリ（Phase 0）</title>
-    <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#ffffff" />
-    <link rel="icon" href="/assets/img/icn/192.png" sizes="192x192" />
-    <link rel="apple-touch-icon" href="/assets/img/icn/192.png" />
-    <link rel="stylesheet" href="/assets/css/style.css" />
+    $1
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#E4572E">
+    <link rel="manifest" href="/manifest.json">
+    <style>
+        body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Noto Sans JP, sans-serif; background:#f5f5f5; color:#333; margin:20px; }
+        .screen { border: 2px solid #ccc; border-radius: 16px; background: #fff; padding: 16px; margin-bottom: 24px; width: 420px; box-shadow: 0 2px 6px rgba(0,0,0,.08); }
+        .header { background:#fff; border:1px solid #ddd; border-radius:12px; padding:10px; display:flex; gap:8px; align-items:center; justify-content: space-between; }
+        .input { flex:1; margin-right:8px; }
+        .input input { width:100%; padding:8px 12px; border:1px solid #ccc; border-radius:999px; }
+        .tabs button { padding:6px 12px; border-radius:999px; border:1px solid #ddd; background:#fafafa; cursor:pointer; }
+        .tabs button[aria-selected="true"] { background:#E4572E; color:#fff; border-color:#E4572E; }
+        .card { border: 1px solid #ddd; border-radius: 12px; padding: 12px; margin: 6px 0; background: #fafafa; }
+        .recipe { display:grid; gap:6px; }
+        .thumb { height:120px; border:1px dashed #ccc; border-radius:8px; background:#eee; display:grid; place-items:center; color:#888; }
+        .button { display:inline-block; padding:6px 10px; margin:2px; border-radius:999px; border:1px solid #ccc; cursor:pointer; font-weight:600; font-size:12px; background:#fff; }
+        .fav { float:right; cursor:pointer; font-size:18px; }
+        .fav.active { color:#E4572E; }
+        .primary { background:#E4572E; color:#fff; }
+        .secondary { background:#2FBF71; color:#fff; }
+        .ghost { background:#fff; border:1px solid #ccc; color:#333; }
+        .tag { display:inline-block; background:#eee; border-radius:999px; padding:4px 8px; margin:2px; font-size:12px; }
+        .meta { color:#666; font-size:12px; }
+        .muted { color:#777; font-size:12px; }
+        mark { background: #fff59d; padding: 0 .15em; border-radius: 3px; }
+    </style>
 </head>
 <body>
-<header class="site-header">
-    <h1>レシピアプリ</h1>
-    <button id="installBtn" hidden>ホームに追加</button>
-</header>
-
-<main>
-    <section>
-        <h2>お気に入りレシピ（ダミー）</h2>
-        <ul class="recipe-list">
-            <li><strong>親子丼</strong> — 15分 / 初級</li>
-            <li><strong>味噌汁</strong> — 10分 / 初級</li>
-            <li><strong>サバの味噌煮</strong> — 25分 / 中級</li>
-        </ul>
-        <p class="muted">※ Phase 0 は表示だけ。検索や保存は後続フェーズで。</p>
-    </section>
-</main>
-
-<footer class="site-footer">© 2025 Recipe App</footer>
+<!-- ホーム（検索＋一覧） -->
+<div class="screen">
+    <div class="header">
+        <div class="input"><input id="searchInput" type="search" placeholder="レシピを検索（スペース区切りでAND：例『鶏 レモン』）" aria-label="レシピ検索" /></div>
+        <div class="tabs" role="tablist" aria-label="表示切替">
+            <button id="tabAll" class="tab ghost" role="tab" aria-selected="true">すべて</button>
+            <button id="tabFav" class="tab ghost" role="tab" aria-selected="false">お気に入り</button>
+        </div>
+    </div>
+    <p class="muted">タイトル・タグ・材料を対象。全角/半角・ひらがな/カタカナのゆらぎを吸収して検索します。</p>
+    <h2>ホーム（一覧）</h2>
+    <div class="card">（将来）カテゴリ / #タグ フィルタバー</div>
+    <div id="recipeList"></div>
+    <div class="card" id="noResults" style="display:none;">該当するレシピが見つかりません。</div>
+</div>
 
 <script>
-    // Service Worker 登録（明示スコープ＋ログ）
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', async () => {
-            try {
-                const reg = await navigator.serviceWorker.register('/service-worker.js', { scope: '/' });
-                console.log('SW registered scope:', reg.scope);
-                await navigator.serviceWorker.ready;
-                console.log('SW ready. controller?', !!navigator.serviceWorker.controller);
-            } catch (e) {
-                console.error('SW register error:', e);
-            }
+    const RECIPES = [
+        { id: 'r1', title: '鶏むねレモンソテー', tags: ['10分','鶏肉'], ingredients: ['鶏むね肉','レモン','塩','こしょう','小麦粉'] },
+        { id: 'r2', title: 'スパイシー焼きそば', tags: ['ｽﾊﾟｲｼｰ'], ingredients: ['中華麺','豚肉','キャベツ','ソース','唐辛子'] },
+        { id: 'r3', title: '具だくさん味噌汁', tags: ['作り置き'], ingredients: ['味噌','豆腐','わかめ','大根','人参'] },
+    ];
+
+    let favorites = JSON.parse(localStorage.getItem('favorites')||'[]');
+
+    const listEl = document.getElementById('recipeList');
+    const inputEl = document.getElementById('searchInput');
+    const noResultsEl = document.getElementById('noResults');
+    const tabAll = document.getElementById('tabAll');
+    const tabFav = document.getElementById('tabFav');
+    let currentTab = 'all';
+
+    function kataToHira(str){ return (str||'').replace(/[ァ-ン]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0x60)); }
+    function normalize(str){ return kataToHira((str||'').toString()).toLowerCase().normalize('NFKC').replace(/\s+/g,'').trim(); }
+    function tokenize(q){ return (q||'').split(/[\s\u3000]+/).map(s => s.trim()).filter(Boolean); }
+
+    function escapeHTML(s){ return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m])); }
+    function highlight(src,tokens){
+        let out = escapeHTML(src);
+        tokens.forEach(t => { if(!t) return; const safe = t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); out = out.replace(new RegExp(safe,'gi'), m=>`<mark>${escapeHTML(m)}</mark>`); });
+        return out;
+    }
+
+    function render(recipes, tokens=[]){
+        listEl.innerHTML = '';
+        if(!recipes.length){ noResultsEl.style.display='block'; return; }
+        noResultsEl.style.display='none';
+        const frag = document.createDocumentFragment();
+        recipes.forEach(r=>{
+            const card=document.createElement('div');
+            card.className='card recipe';
+            const favActive = favorites.includes(r.id)?'active':'';
+            const ingText = r.ingredients.join('、');
+            const tagsHTML = r.tags.map(t=>`<span class="tag">#${escapeHTML(t)}</span>`).join(' ');
+            card.innerHTML=`
+          <div class="thumb">サムネ</div>
+          <div>
+            <strong>${highlight(r.title,tokens)}</strong>
+            <span class="fav ${favActive}" data-id="${r.id}">★</span><br>
+            ${tagsHTML}
+            <div class="meta">材料: ${highlight(ingText,tokens)}</div>
+          </div>`;
+            frag.appendChild(card);
+        });
+        listEl.appendChild(frag);
+        listEl.querySelectorAll('.fav').forEach(el=>{
+            el.addEventListener('click',()=>{
+                const id=el.dataset.id;
+                if(favorites.includes(id)){
+                    favorites=favorites.filter(f=>f!==id);
+                } else {
+                    favorites.push(id);
+                }
+                localStorage.setItem('favorites',JSON.stringify(favorites));
+                onQuery();
+            });
         });
     }
 
-    // PWA インストールプロンプト
-    let deferredPrompt;
-    const btn = document.getElementById('installBtn');
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        btn.hidden = false;
-    });
-    btn.addEventListener('click', async () => {
-        if (!deferredPrompt) return;
-        deferredPrompt.prompt();
-        await deferredPrompt.userChoice;
-        btn.hidden = true;
-        deferredPrompt = null;
-    });
+    function filterRecipes(q){
+        const tokens=tokenize(q);
+        let base=currentTab==='fav'?RECIPES.filter(r=>favorites.includes(r.id)):RECIPES;
+        if(!tokens.length) return { list: base, tokens };
+        const nTokens=tokens.map(normalize);
+        const list=base.filter(r=>{
+            const hay=normalize(r.title+' '+r.tags.join(' ')+' '+r.ingredients.join(' '));
+            return nTokens.every(tk=>hay.includes(tk));
+        });
+        return { list, tokens };
+    }
+
+    function onQuery(){
+        const {list,tokens}=filterRecipes(inputEl.value);
+        render(list,tokens);
+    }
+
+    inputEl.addEventListener('input', onQuery);
+    inputEl.addEventListener('keydown',e=>{ if(e.key==='Enter') onQuery(); });
+
+    tabAll.addEventListener('click',()=>{ currentTab='all'; tabAll.setAttribute('aria-selected','true'); tabFav.setAttribute('aria-selected','false'); onQuery(); });
+    tabFav.addEventListener('click',()=>{ currentTab='fav'; tabAll.setAttribute('aria-selected','false'); tabFav.setAttribute('aria-selected','true'); onQuery(); });
+
+    onQuery();
+
+    // --- Service Worker 登録 ---
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(reg => console.log('SW登録成功', reg.scope))
+                .catch(err => console.error('SW登録失敗', err));
+        });
+    }
 </script>
+
+<!-- PWA: Service Worker registration (ページロード時に登録) -->
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', async () => {
+            try {
+                const reg = await navigator.serviceWorker.register('/service-worker.js');
+                console.log('[PWA] SW registered:', reg.scope);
+            } catch (e) {
+                console.warn('[PWA] SW registration failed:', e);
+            }
+        });
+    }
+</script>
+
+<!-- ▼ この下の2つのコードは、実際には別ファイルとして保存して使ってね ▼ -->
+<!-- ===== manifest.json（/manifest.json に保存） =====
+
+===== ここまで manifest.json ===== -->
+
+<!-- ===== service-worker.js（/service-worker.js に保存） =====
+
+===== ここまで service-worker.js ===== -->
+
 </body>
 </html>
