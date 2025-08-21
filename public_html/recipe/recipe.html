@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <title>レシピ詳細 | レシピアプリ</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="theme-color" content="#ffffff">
+    <link rel="icon" href="/assets/img/icn/192.png" sizes="192x192">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <!-- OG最小 -->
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="レシピアプリ">
+    <meta property="og:title" content="レシピ詳細">
+    <meta property="og:image" content="/assets/img/icn/512.png">
+    <meta name="description" content="レシピの材料・手順・コツをわかりやすく表示します。">
+
+    <script>
+        // 404・パラメータ欠如の簡易対策
+        if (!location.search.includes('id=')) {
+            location.href = '/index.html';
+        }
+    </script>
+</head>
+<body>
+<header class="l-header">
+    <a class="c-back" href="/index.html">← 一覧へ</a>
+    <h1 class="c-title" id="recipe-title">読み込み中…</h1>
+</header>
+
+<main class="l-main">
+    <figure class="c-hero">
+        <img id="recipe-image" alt="" decoding="async" loading="lazy">
+        <figcaption id="recipe-summary" class="c-summary"></figcaption>
+    </figure>
+
+    <section class="c-meta">
+        <div><strong>所要時間</strong>：<span id="recipe-time">–</span></div>
+        <div><strong>分量</strong>：<span id="recipe-yield">–</span></div>
+        <div><strong>難易度</strong>：<span id="recipe-difficulty">–</span></div>
+    </section>
+
+    <section class="c-section">
+        <h2>材料</h2>
+        <ul id="recipe-ingredients" class="c-list"></ul>
+    </section>
+
+    <section class="c-section">
+        <h2>手順</h2>
+        <ol id="recipe-instructions" class="c-steps"></ol>
+    </section>
+
+    <section class="c-section" id="nutrition-wrap" hidden>
+        <h2>栄養（1人分目安）</h2>
+        <ul id="recipe-nutrition" class="c-list c-list--cols"></ul>
+    </section>
+
+    <section class="c-section" id="tips-wrap" hidden>
+        <h2>コツ・メモ</h2>
+        <ul id="recipe-tips" class="c-list"></ul>
+    </section>
+
+    <!-- JSON-LD は JS が動的に挿入 -->
+    <script type="module" src="/assets/js/recipe.js"></script>
+</main>
+
+<footer class="l-footer">
+    <small>&copy; 2025 レシピアプリ</small>
+</footer>
+</body>
+</html>

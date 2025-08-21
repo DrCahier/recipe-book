@@ -1,160 +1,92 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="utf-8">
     <title>レシピアプリ</title>
-    <meta name="theme-color" content="#E4572E">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="/assets/img/icn/192.png" sizes="192x192">
+    <link rel="apple-touch-icon" href="/assets/img/icn/512.png" sizes="512x512">
     <link rel="stylesheet" href="/assets/css/style.css">
-    <style>
-        body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Noto Sans JP, sans-serif; background:#f5f5f5; color:#333; margin:20px; }
-        .screen { border: 2px solid #ccc; border-radius: 16px; background: #fff; padding: 16px; margin-bottom: 24px; width: 420px; box-shadow: 0 2px 6px rgba(0,0,0,.08); }
-        .header { background:#fff; border:1px solid #ddd; border-radius:12px; padding:10px; display:flex; gap:8px; align-items:center; justify-content: space-between; }
-        .input { flex:1; margin-right:8px; }
-        .input input { width:100%; padding:8px 12px; border:1px solid #ccc; border-radius:999px; }
-        .tabs button { padding:6px 12px; border-radius:999px; border:1px solid #ddd; background:#fafafa; cursor:pointer; }
-        .tabs button[aria-selected="true"] { background:#E4572E; color:#fff; border-color:#E4572E; }
-        .card { border: 1px solid #ddd; border-radius: 12px; padding: 12px; margin: 6px 0; background: #fafafa; }
-        .recipe { display:grid; gap:6px; }
-        .thumb { height:120px; border:1px dashed #ccc; border-radius:8px; background:#eee; display:grid; place-items:center; color:#888; }
-        .button { display:inline-block; padding:6px 10px; margin:2px; border-radius:999px; border:1px solid #ccc; cursor:pointer; font-weight:600; font-size:12px; background:#fff; }
-        .fav { float:right; cursor:pointer; font-size:18px; }
-        .fav.active { color:#E4572E; }
-        .primary { background:#E4572E; color:#fff; }
-        .secondary { background:#2FBF71; color:#fff; }
-        .ghost { background:#fff; border:1px solid #ccc; color:#333; }
-        .tag { display:inline-block; background:#eee; border-radius:999px; padding:4px 8px; margin:2px; font-size:12px; }
-        .meta { color:#666; font-size:12px; }
-        .muted { color:#777; font-size:12px; }
-        mark { background: #fff59d; padding: 0 .15em; border-radius: 3px; }
-        #resultCount { font-size:12px; color:#666; margin:6px 0 0; }
-    </style>
+    <meta name="theme-color" content="#ffffff">
 </head>
 <body>
-<!-- ホーム（検索＋一覧） -->
-<div class="screen" role="main" aria-labelledby="home-ttl">
-    <div class="header">
-        <div class="input">
-            <input id="searchInput" type="search" placeholder="レシピを検索（スペース区切りでAND：例『鶏 レモン』）" aria-label="レシピ検索" autocomplete="off" />
-        </div>
-        <div class="tabs" role="tablist" aria-label="表示切替">
-            <button id="tabAll" class="tab ghost" role="tab" aria-selected="true" aria-controls="recipeList">すべて</button>
-            <button id="tabFav" class="tab ghost" role="tab" aria-selected="false" aria-controls="recipeList">お気に入り</button>
-        </div>
+<header class="l-header">
+    <h1 class="app-title"><a href="/" class="home-link" aria-label="ホームへ">レシピ</a></h1>
+
+    <div class="search">
+        <input id="q" type="search" placeholder="レシピを検索…" autocomplete="off" aria-label="レシピを検索">
     </div>
-    <p class="muted">タイトル・タグ・材料を対象。全角/半角・ひらがな/カタカナのゆらぎを吸収して検索します。</p>
 
-    <h2 id="home-ttl">ホーム（一覧）</h2>
-    <div class="card">（将来）カテゴリ / #タグ フィルタバー</div>
-    <p id="resultCount" aria-live="polite"></p>
-    <div id="recipeList"></div>
-    <div class="card" id="noResults" style="display:none;">該当するレシピが見つかりません。</div>
-</div>
+    <!-- 並び替え -->
+    <label class="sortwrap" aria-label="並び替え">
+        <span class="sortlabel">並び</span>
+        <select id="sortSel" class="sortsel" aria-label="並び替え">
+            <option value="">デフォルト</option>
+            <option value="title_asc">タイトル A→Z</option>
+            <option value="time_asc">時間 短い順</option>
+            <option value="time_desc">時間 長い順</option>
+        </select>
+    </label>
+    <label class="chkwrap" title="お気に入りを上に表示">
+        <input id="favFirstChk" type="checkbox" aria-label="お気に入りを上に"> ★上に
+    </label>
 
-<script>
-    const RECIPES = [
-        { id: 'r1', title: '鶏むねレモンソテー', tags: ['10分','鶏肉'], ingredients: ['鶏むね肉','レモン','塩','こしょう','小麦粉'] },
-        { id: 'r2', title: 'スパイシー焼きそば', tags: ['ｽﾊﾟｲｼｰ'], ingredients: ['中華麺','豚肉','キャベツ','ソース','唐辛子'] },
-        { id: 'r3', title: '具だくさん味噌汁', tags: ['作り置き'], ingredients: ['味噌','豆腐','わかめ','大根','人参'] },
-    ];
+    <!-- お気に入りフィルタ -->
+    <button id="favFilterBtn" class="btn -ghost" aria-pressed="false" title="お気に入りだけ表示">
+        ★ お気に入り <span id="favCount" aria-live="polite"></span>
+    </button>
 
-    let favorites = JSON.parse(localStorage.getItem('favorites')||'[]');
+    <!-- タグ一覧ページへ -->
+    <a id="navTags" class="btn -ghost" href="/?v=tags" aria-label="タグ一覧"># タグ</a>
+</header>
 
-    const listEl = document.getElementById('recipeList');
-    const inputEl = document.getElementById('searchInput');
-    const noResultsEl = document.getElementById('noResults');
-    const tabAll = document.getElementById('tabAll');
-    const tabFav = document.getElementById('tabFav');
-    const resultCount = document.getElementById('resultCount');
-    let currentTab = 'all';
+<main class="l-main" id="main">
+    <!-- 一覧ページ -->
+    <section id="page-list" aria-labelledby="list-heading">
+        <h2 id="list-heading" class="visually-hidden">レシピ一覧</h2>
+        <ul id="recipe-list" class="recipe-list" role="list" aria-live="polite"></ul>
+        <div id="empty" class="empty" hidden>
+            該当するレシピがありません。<br>
+            <span id="emptyHint" style="font-size:.9rem;color:#999"></span>
+        </div>
+    </section>
 
-    function kataToHira(str){ return (str||'').replace(/[ァ-ン]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0x60)); }
-    function normalize(str){ return kataToHira((str||'').toString()).toLowerCase().normalize('NFKC').replace(/\s+/g,'').trim(); }
-    function tokenize(q){ return (q||'').split(/[\s\u3000]+/).map(s => s.trim()).filter(Boolean); }
+    <!-- 詳細ページ -->
+    <section id="page-detail" hidden aria-labelledby="detail-heading">
+        <nav class="breadcrumb">
+            <a href="/" id="backLink" class="btn -ghost" aria-label="一覧に戻る">← 一覧へ戻る</a>
+        </nav>
+        <article class="detail">
+            <header>
+                <h2 id="detail-heading" class="detail__title"></h2>
+                <p class="meta"><span id="d-time"></span> / <span id="d-tags"></span></p>
+                <button id="favToggleDetail" class="fav-btn" aria-pressed="false" title="お気に入りに追加">☆ お気に入り</button>
+            </header>
+            <section>
+                <h3>材料</h3>
+                <ul id="d-ingredients" class="bullets"></ul>
+            </section>
+            <section>
+                <h3>手順</h3>
+                <ol id="d-steps" class="steps"></ol>
+            </section>
+        </article>
+    </section>
 
-    function escapeHTML(s){ return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m])); }
-    function highlight(src,tokens){
-        let out = escapeHTML(src);
-        tokens.forEach(t => { if(!t) return; const safe = t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); out = out.replace(new RegExp(safe,'gi'), m=>`<mark>${escapeHTML(m)}</mark>`); });
-        return out;
-    }
+    <!-- タグ一覧ページ -->
+    <section id="page-tags" hidden aria-labelledby="tags-heading">
+        <nav class="breadcrumb">
+            <a href="/" id="backFromTags" class="btn -ghost" aria-label="一覧に戻る">← 一覧へ戻る</a>
+        </nav>
+        <h2 id="tags-heading">タグ一覧</h2>
+        <p id="tagStats" class="meta"></p>
+        <ul id="tag-list" class="tag-list" role="list"></ul>
+        <div id="tag-empty" class="empty" hidden>タグがありません。</div>
+    </section>
+</main>
 
-    function render(recipes, tokens=[]){
-        listEl.innerHTML = '';
-        resultCount.textContent = `${recipes.length}件ヒット`;
-        if(!recipes.length){ noResultsEl.style.display='block'; return; }
-        noResultsEl.style.display='none';
-        const frag = document.createDocumentFragment();
-        recipes.forEach(r=>{
-            const card=document.createElement('div');
-            card.className='card recipe';
-            const favActive = favorites.includes(r.id)?'active':'';
-            const ingText = r.ingredients.join('、');
-            const tagsHTML = r.tags.map(t=>`<span class="tag">#${escapeHTML(t)}</span>`).join(' ');
-            card.innerHTML=`
-        <div class="thumb" role="img" aria-label="サムネイル">サムネ</div>
-        <div>
-          <strong>${highlight(r.title,tokens)}</strong>
-          <button class="fav ${favActive}" data-id="${r.id}" aria-pressed="${favActive ? 'true' : 'false'}" aria-label="お気に入り切替">★</button><br>
-          ${tagsHTML}
-          <div class="meta">材料: ${highlight(ingText,tokens)}</div>
-        </div>`;
-            frag.appendChild(card);
-        });
-        listEl.appendChild(frag);
-        listEl.querySelectorAll('.fav').forEach(el=>{
-            el.addEventListener('click',()=>{
-                const id=el.dataset.id;
-                if(favorites.includes(id)){
-                    favorites=favorites.filter(f=>f!==id);
-                } else {
-                    favorites.push(id);
-                }
-                localStorage.setItem('favorites',JSON.stringify(favorites));
-                onQuery();
-            });
-        });
-    }
-
-    function filterRecipes(q){
-        const tokens=tokenize(q);
-        let base=currentTab==='fav'?RECIPES.filter(r=>favorites.includes(r.id)):RECIPES;
-        if(!tokens.length) return { list: base, tokens };
-        const nTokens=tokens.map(normalize);
-        const list=base.filter(r=>{
-            const hay=normalize(r.title+' '+r.tags.join(' ')+' '+r.ingredients.join(' '));
-            return nTokens.every(tk=>hay.includes(tk));
-        });
-        return { list, tokens };
-    }
-
-    function onQuery(){
-        const {list,tokens}=filterRecipes(inputEl.value);
-        render(list,tokens);
-    }
-
-    inputEl.addEventListener('input', onQuery);
-    inputEl.addEventListener('keydown',e=>{ if(e.key==='Enter') onQuery(); });
-
-    tabAll.addEventListener('click',()=>{ currentTab='all'; tabAll.setAttribute('aria-selected','true'); tabFav.setAttribute('aria-selected','false'); onQuery(); });
-    tabFav.addEventListener('click',()=>{ currentTab='fav'; tabAll.setAttribute('aria-selected','false'); tabFav.setAttribute('aria-selected','true'); onQuery(); });
-
-    onQuery();
-
-    // --- Service Worker 登録（単一） ---
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', async () => {
-            try {
-                const reg = await navigator.serviceWorker.register('/service-worker.js');
-                console.log('[PWA] SW registered:', reg.scope);
-            } catch (e) {
-                console.warn('[PWA] SW registration failed:', e);
-            }
-        });
-    }
-</script>
-
-<noscript>JavaScriptを有効にすると検索とお気に入りが使えます。</noscript>
+<noscript>このアプリを使うには JavaScript を有効にしてください。</noscript>
+<script src="/app.js" defer></script>
 </body>
 </html>
