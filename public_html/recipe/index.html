@@ -132,7 +132,11 @@
 </main>
 
 <noscript>このアプリを使うには JavaScript を有効にしてください。</noscript>
-<script src="/assets/js/drive.js"></script>
+<!-- Google API (Picker用) をまだ入れてなければ追加 -->
+<script src="https://apis.google.com/js/api.js" async defer></script>
+
+<!-- 分割版 Drive モジュール -->
+<script type="module" src="/assets/js/drive/index.js"></script>
 <script src="/app.js" defer></script>
 <!-- 追加：入出力モジュール -->
 <script src="/assets/js/io.js" defer></script>
