@@ -6,10 +6,15 @@
      - openConflictFor(id) ... 手動で開く（必要なら）
 */
 import { LOCAL_KEY } from './config.js';
-import { uploadOrUpdateMarkdown } from './sync.js';
 
 const HINT_KEY = 'drive-remote-hints';
 const $ = (s, r=document)=>r.querySelector(s);
+
+// 重複していた setMsg を1つに統一
+export function setMsg(sel, html) {
+    const n = typeof sel === 'string' ? document.querySelector(sel) : sel;
+    if (n) n.innerHTML = html;
+}
 
 function getHintIds(){
     try{ const m = JSON.parse(localStorage.getItem(HINT_KEY) || '{}'); return Object.keys(m); }catch{ return []; }
@@ -20,7 +25,7 @@ function hasHint(id){
 function clearHint(id){
     try{
         const m = JSON.parse(localStorage.getItem(HINT_KEY) || '{}');
-        if (m[id]) { delete m[id]; localStorage.setItem(HINT_KEY, JSON.stringify(m)); }
+        if (m[id]){ delete m[id]; localStorage.setItem(HINT_KEY, JSON.stringify(m)); }
     }catch{}
 }
 
@@ -44,29 +49,30 @@ function buildModal(id){
       </div>
     </div>
   `;
-    el.addEventListener('click', (e)=>{ if(e.target===el) el.remove(); });
+    el.addEventListener('click', (e)=>{ if (e.target === el) el.remove(); });
     $('#cf-close', el).addEventListener('click', ()=> el.remove());
 
     // handlers
     $('#cf-keep-remote', el).addEventListener('click', async ()=>{
-        // Driveの最新版をローカルへ取り込む（最も新しい値を信じる）
         try{
-            // ここではローカルをDriveに合わせる（＝ヒントを消すだけでOK）
             clearHint(id);
             window.dispatchEvent(new CustomEvent('recipe:reloadRequested', { detail:{ id }}));
-        }finally{
+        } finally{
             el.remove();
         }
     });
 
     $('#cf-keep-local', el).addEventListener('click', async ()=>{
         try{
-            // ローカルの現在値を force でアップロード
+            // ★ ここでの依存を避けるため、必要な時だけ動的 import
+            const { uploadOrUpdateMarkdown } = await import('./sync.js');
             const list = JSON.parse(localStorage.getItem(LOCAL_KEY) || '[]');
-            const r = list.find(x => x.id === id);
-            if (r) {
-                r.updatedAt = new Date().toISOString(); // 念のため今の時刻に
-                await uploadOrUpdateMarkdown(r, { forceLocal: true });
+            const r = Array.isArray(list) ? list.find(x=>x.id===id)
+                : (list.recipes && Array.isArray(list.recipes)) ? list.recipes.find(x=>x.id===id)
+                    : (list.recipes ? list.recipes[id] : null);
+            if (r){
+                r.updatedAt = new Date().toISOString();
+                await uploadOrUpdateMarkdown(r, { forceLocal:true });
             }
             clearHint(id);
             window.dispatchEvent(new CustomEvent('recipe:forcedUpload', { detail:{ id }}));
@@ -88,16 +94,16 @@ export function openConflictFor(id){
     document.body.appendChild(buildModal(id));
 }
 
-// 1) sync.js からの通知で即時に出す
+// sync.js からの通知で開く
 window.addEventListener('recipe:remoteNewer', (ev)=>{
     const id = ev.detail?.id;
     if (id) openConflictFor(id);
 });
 
-// 2) タブを前面にした時に未処理のヒントがあれば出す
+// タブ復帰時にヒントが残っていれば開く
 document.addEventListener('visibilitychange', ()=>{
-    if (document.visibilityState === 'visible') {
+    if (document.visibilityState === 'visible'){
         const ids = getHintIds();
-        if (ids.length) openConflictFor(ids[0]); // まとめてではなく1件ずつ
+        if (ids.length) openConflictFor(ids[0]);
     }
 });
