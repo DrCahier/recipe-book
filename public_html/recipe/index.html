@@ -3,6 +3,8 @@
 <head>
     <meta charset="utf-8">
     <title>レシピアプリ</title>
+    <!-- Google Identity Services (OAuth2) -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" href="/assets/img/icn/192.png" sizes="192x192">
@@ -46,6 +48,31 @@
 </header>
 
 <main class="l-main" id="main">
+
+    <!--ドライブセクション-->
+    <section class="c-card" id="drive-section" aria-labelledby="drive-heading">
+        <h2 id="drive-heading" class="c-card__title">Google Drive</h2>
+        <div class="c-card__body">
+            <div class="c-actions" style="gap:.5rem; display:flex; flex-wrap:wrap; align-items:center;">
+                <button id="drive-connect" class="btn">Driveに接続</button>
+                <!-- （保存先UIを使っているならそれはそのまま。旧UIなら省略可） -->
+                <button id="drive-pick-folder" class="btn -ghost" disabled>保存先フォルダを選ぶ</button>
+
+                <button id="drive-import" class="btn -ghost" disabled>Driveから取り込み</button>
+                <button id="drive-sync" class="btn" disabled>Driveと同期</button>
+            </div>
+
+
+            <p class="c-help">
+                例）<code>RecipeApp/recipes</code> ／ 既存フォルダIDを使う場合は
+                <code>id:1AbCdefGh...</code>
+            </p>
+            <div id="drive-result" class="c-note" aria-live="polite"></div>
+        </div>
+    </section>
+    <!--/ドライブセクション-->
+
+
     <!-- 追加：インポート／エクスポート -->
     <section class="c-card" id="io-section" aria-labelledby="io-heading">
         <h2 id="io-heading" class="c-card__title">インポート／エクスポート</h2>
@@ -105,6 +132,7 @@
 </main>
 
 <noscript>このアプリを使うには JavaScript を有効にしてください。</noscript>
+<script src="/assets/js/drive.js"></script>
 <script src="/app.js" defer></script>
 <!-- 追加：入出力モジュール -->
 <script src="/assets/js/io.js" defer></script>
