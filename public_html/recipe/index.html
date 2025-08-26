@@ -62,7 +62,6 @@
                 <button id="drive-sync" class="btn" disabled>Driveと同期</button>
             </div>
 
-
             <p class="c-help">
                 例）<code>RecipeApp/recipes</code> ／ 既存フォルダIDを使う場合は
                 <code>id:1AbCdefGh...</code>
@@ -71,7 +70,6 @@
         </div>
     </section>
     <!--/ドライブセクション-->
-
 
     <!-- 追加：インポート／エクスポート -->
     <section class="c-card" id="io-section" aria-labelledby="io-heading">
@@ -132,13 +130,29 @@
 </main>
 
 <noscript>このアプリを使うには JavaScript を有効にしてください。</noscript>
-<!-- Google API (Picker用) をまだ入れてなければ追加 -->
+
+<!-- Google API (Picker用) -->
 <script src="https://apis.google.com/js/api.js" async defer></script>
 
-<!-- 分割版 Drive モジュール -->
-<script type="module" src="/assets/js/drive/index.js"></script>
+<!-- ★ Drive関連は ESM 入口1本だけ（キャッシュバスター付き推奨） -->
+<script type="module" src="/assets/js/app.js?v=20250826c"></script>
+<!-- アプリ本体（従来スクリプト = ルートの /app.js） -->
 <script src="/app.js" defer></script>
-<!-- 追加：入出力モジュール -->
 <script src="/assets/js/io.js" defer></script>
+<script src="/assets/js/editui.js" defer></script>
+<script src="/assets/js/savebadge.js" defer></script>
+
+<!-- サービスワーカー登録（?sw=1 が付いている時だけ有効） -->
+<script>
+    if ('serviceWorker' in navigator && new URLSearchParams(location.search).get('sw') === '1') {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/service-worker.js', { scope: '/' })
+                .then(reg => console.log('[SW] registered:', reg.scope))
+                .catch(err => console.error('[SW] register error:', err));
+        });
+    } else {
+        console.log('[SW] skip register (開発モード)');
+    }
+</script>
 </body>
 </html>
