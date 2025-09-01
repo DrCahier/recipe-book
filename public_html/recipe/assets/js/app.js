@@ -72,6 +72,11 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // autosync / deltaqueue を起動
+    Drive.startAutoSync();
+    Drive.startDeltaQueue();
+
+
     // 初期状態
     refreshDriveButtons();
 });

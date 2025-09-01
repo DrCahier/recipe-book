@@ -25,3 +25,9 @@
 #RewriteEngine On
 #RewriteCond %{HTTP_HOST} ^www\.recipe\.graphicker\.com$ [NC]
 #RewriteRule ^(.*)$ https://recipe.graphicker.com/$1 [L,R=301]
+
+# === GISのポップアップが閉じないようにする ===
+<IfModule mod_headers.c>
+  Header always set Cross-Origin-Opener-Policy "same-origin-allow-popups"
+  Header always set Cross-Origin-Embedder-Policy "unsafe-none"
+</IfModule>
